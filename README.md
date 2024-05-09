@@ -7,7 +7,11 @@
 - Desenvolver código legível e de fácil manutenção é crucial para o sucesso de um projeto em PHP.
 - Seguir padrões de codificação estabelecidos, como as PSRs e princípios de Clean Code, ajuda a alcançar esses objetivos.
 
-## PSR-12: Padrão de Código Estilo
+## [PSR-12](https://www.php-fig.org/psr/psr-12/): Padrão de Código
+As recomendações criadas pelo PHP-FIG são agrupadas em PHP Standard Recommendation (PSR). 
+Uma PSR basicamente possui recomendações sobre um tema específico, como por exemplo, 
+a PSR-12 que fala sobre padronização de sintaxe de código. Cada PSR é identificada por um número e 
+possui um status.
 
 - Define um padrão de estilo para a escrita de código PHP.
 - Promove a consistência e a legibilidade do código em projetos compartilhados.
@@ -162,52 +166,58 @@ return "Pessoa deletada com sucesso.";
 /**
 * Classe aplicando boas práticas
  */
+<?php
+
 namespace Model;
+
+use PDO;
+use PDOException;
 
 class Pessoa
 {
     private $conexao;
-
     public $nome;
     public $idade;
     public $cidade;
     public $endereco;
     public $telefone;
 
-    public function __construct($conexao, $nome = null, $idade = null, $cidade = null, $endereco = null, $telefone = null)
+    public function __construct()
     {
-        $this->conexao = $conexao;
-        $this->nome = $nome;
-        $this->idade = $idade;
-        $this->cidade = $cidade;
-        $this->endereco = $endereco;
-        $this->telefone = $telefone;
+        $dsn = 'mysql:host=localhost;dbname=seu_banco_de_dados';
+        $usuario = 'seu_usuario';
+        $senha = 'sua_senha';
+
+        try {
+            $this->conexao = new PDO($dsn, $usuario, $senha);
+        } catch (PDOException $e) {
+            echo 'Erro de conexão: ' . $e->getMessage();
+        }
+    }
+
+    public function exibirInformacoes()
+    {
+        echo "Nome: {$this->nome}, Idade: {$this->idade}, Cidade: {$this->cidade}, Endereço: {$this->endereco}, Telefone: {$this->telefone}";
     }
 
     public function validar()
     {
         $erros = [];
-
         if (!is_string($this->nome) || empty($this->nome)) {
             $erros[] = "O nome deve ser uma string não vazia.";
         }
-
         if (!is_int($this->idade) || $this->idade < 0) {
             $erros[] = "A idade deve ser um número inteiro positivo.";
         }
-
         if (!is_string($this->cidade) || empty($this->cidade)) {
             $erros[] = "A cidade deve ser uma string não vazia.";
         }
-
         if (!is_string($this->endereco) || empty($this->endereco)) {
             $erros[] = "O endereço deve ser uma string não vazia.";
         }
-
         if (!is_string($this->telefone) || empty($this->telefone)) {
             $erros[] = "O telefone deve ser uma string não vazia.";
         }
-
         return $erros;
     }
 
@@ -217,7 +227,6 @@ class Pessoa
         if (!empty($erros)) {
             return $erros;
         }
-
         $query = "INSERT INTO pessoas (nome, idade, cidade, endereco, telefone) VALUES (:nome, :idade, :cidade, :endereco, :telefone)";
         $stmt = $this->conexao->prepare($query);
         $stmt->bindParam(':nome', $this->nome);
@@ -226,7 +235,6 @@ class Pessoa
         $stmt->bindParam(':endereco', $this->endereco);
         $stmt->bindParam(':telefone', $this->telefone);
         $stmt->execute();
-
         return "Pessoa criada com sucesso.";
     }
 
@@ -237,13 +245,11 @@ class Pessoa
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         $dados = $stmt->fetch(PDO::FETCH_ASSOC);
-
         $this->nome = $dados['nome'];
         $this->idade = $dados['idade'];
         $this->cidade = $dados['cidade'];
         $this->endereco = $dados['endereco'];
         $this->telefone = $dados['telefone'];
-
         return "Dados da pessoa lidos com sucesso.";
     }
 
@@ -253,7 +259,6 @@ class Pessoa
         if (!empty($erros)) {
             return $erros;
         }
-
         $query = "UPDATE pessoas SET nome = :nome, idade = :idade, cidade = :cidade, endereco = :endereco, telefone = :telefone WHERE id = :id";
         $stmt = $this->conexao->prepare($query);
         $stmt->bindParam(':nome', $this->nome);
@@ -263,7 +268,6 @@ class Pessoa
         $stmt->bindParam(':telefone', $this->telefone);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
-
         return "Dados da pessoa atualizados com sucesso.";
     }
 
@@ -273,7 +277,6 @@ class Pessoa
         $stmt = $this->conexao->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
-
         return "Pessoa deletada com sucesso.";
     }
 }
