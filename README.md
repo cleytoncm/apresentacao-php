@@ -62,10 +62,104 @@ if ($pessoa->idade >= 0 && $pessoa->idade < 10) {
     }
 }
 ```
+#### Falta de boas práticas
+```php
+<?php
+namespace Model;
+class Pessoa {
+private $con;
+public $n;
+public $i;
+public $c;
+public $e;
+public $t;
+public function __construct($con, $n=null, $i=null, $c=null, $e=null, $t=null) {
+$this->con=$con;
+$this->n=$n;
+$this->i=$i;
+$this->c=$c;
+$this->e=$e;
+$this->t=$t;
+}
+public function validar() {
+$e=[];
+if(!is_string($this->n)||empty($this->n)) {
+$e[]="O nome deve ser uma string não vazia.";
+}
+if(!is_int($this->i)||$this->i<0) {
+$e[]="A idade deve ser um número inteiro positivo.";
+}
+if(!is_string($this->c)||empty($this->c)) {
+$e[]="A cidade deve ser uma string não vazia.";
+}
+if(!is_string($this->e)||empty($this->e)) {
+$e[]="O endereço deve ser uma string não vazia.";
+}
+if(!is_string($this->t)||empty($this->t)) {
+$e[]="O telefone deve ser uma string não vazia.";
+}
+return $e;
+}
+public function criar() {
+$e=$this->validar();
+if(!empty($e)) {
+return $e;
+}
+$q="INSERT INTO pessoas (nome, idade, cidade, endereco, telefone) VALUES (:n, :i, :c, :e, :t)";
+$s=$this->con->prepare($q);
+$s->bindParam(':n', $this->n);
+$s->bindParam(':i', $this->i);
+$s->bindParam(':c', $this->c);
+$s->bindParam(':e', $this->e);
+$s->bindParam(':t', $this->t);
+$s->execute();
+return "Pessoa criada com sucesso.";
+}
+public function ler($id) {
+$q="SELECT * FROM pessoas WHERE id=:id";
+$s=$this->con->prepare($q);
+$s->bindParam(':id', $id);
+$s->execute();
+$d=$s->fetch(PDO::FETCH_ASSOC);
+$this->n=$d['nome'];
+$this->i=$d['idade'];
+$this->c=$d['cidade'];
+$this->e=$d['endereco'];
+$this->t=$d['telefone'];
+return "Dados da pessoa lidos com sucesso.";
+}
+public function atualizar($id) {
+$e=$this->validar();
+if(!empty($e)) {
+return $e;
+}
+$q="UPDATE pessoas SET nome=:n, idade=:i, cidade=:c, endereco=:e, telefone=:t WHERE id=:id";
+$s=$this->con->prepare($q);
+$s->bindParam(':n', $this->n);
+$s->bindParam(':i', $this->i);
+$s->bindParam(':c', $this->c);
+$s->bindParam(':e', $this->e);
+$s->bindParam(':t', $this->t);
+$s->bindParam(':id', $id);
+$s->execute();
+return "Dados da pessoa atualizados com sucesso.";
+}
+public function deletar($id) {
+$q="DELETE FROM pessoas WHERE id=:id";
+$s=$this->con->prepare($q);
+$s->bindParam(':id', $id);
+$s->execute();
+return "Pessoa deletada com sucesso.";
+}
+}
+
+```
 
 ```php
 <?php
-
+/**
+* Classe aplicando boas práticas
+ */
 namespace Model;
 
 class Pessoa
@@ -88,32 +182,26 @@ class Pessoa
         $this->telefone = $telefone;
     }
 
-    // Função para validar os atributos da pessoa
     public function validar()
     {
         $erros = [];
 
-        // Validar nome
         if (!is_string($this->nome) || empty($this->nome)) {
             $erros[] = "O nome deve ser uma string não vazia.";
         }
 
-        // Validar idade
         if (!is_int($this->idade) || $this->idade < 0) {
             $erros[] = "A idade deve ser um número inteiro positivo.";
         }
 
-        // Validar cidade
         if (!is_string($this->cidade) || empty($this->cidade)) {
             $erros[] = "A cidade deve ser uma string não vazia.";
         }
 
-        // Validar endereco
         if (!is_string($this->endereco) || empty($this->endereco)) {
             $erros[] = "O endereço deve ser uma string não vazia.";
         }
 
-        // Validar telefone
         if (!is_string($this->telefone) || empty($this->telefone)) {
             $erros[] = "O telefone deve ser uma string não vazia.";
         }
@@ -121,16 +209,13 @@ class Pessoa
         return $erros;
     }
 
-    // Função para criar uma nova pessoa
     public function criar()
     {
-        // Executar validação
         $erros = $this->validar();
         if (!empty($erros)) {
-            return $erros; // Retorna erros se a validação falhar
+            return $erros;
         }
 
-        // Preparar e executar a query SQL para inserir uma nova pessoa
         $query = "INSERT INTO pessoas (nome, idade, cidade, endereco, telefone) VALUES (:nome, :idade, :cidade, :endereco, :telefone)";
         $stmt = $this->conexao->prepare($query);
         $stmt->bindParam(':nome', $this->nome);
@@ -143,17 +228,14 @@ class Pessoa
         return "Pessoa criada com sucesso.";
     }
 
-    // Função para ler os dados de uma pessoa existente
     public function ler($id)
     {
-        // Preparar e executar a query SQL para ler os dados de uma pessoa
         $query = "SELECT * FROM pessoas WHERE id = :id";
         $stmt = $this->conexao->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         $dados = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Atribuir os dados lidos aos atributos da pessoa
         $this->nome = $dados['nome'];
         $this->idade = $dados['idade'];
         $this->cidade = $dados['cidade'];
@@ -163,16 +245,13 @@ class Pessoa
         return "Dados da pessoa lidos com sucesso.";
     }
 
-    // Função para atualizar os dados de uma pessoa existente
     public function atualizar($id)
     {
-        // Executar validação
         $erros = $this->validar();
         if (!empty($erros)) {
-            return $erros; // Retorna erros se a validação falhar
+            return $erros;
         }
 
-        // Preparar e executar a query SQL para atualizar os dados de uma pessoa
         $query = "UPDATE pessoas SET nome = :nome, idade = :idade, cidade = :cidade, endereco = :endereco, telefone = :telefone WHERE id = :id";
         $stmt = $this->conexao->prepare($query);
         $stmt->bindParam(':nome', $this->nome);
@@ -186,10 +265,8 @@ class Pessoa
         return "Dados da pessoa atualizados com sucesso.";
     }
 
-    // Função para deletar uma pessoa existente
     public function deletar($id)
     {
-        // Preparar e executar a query SQL para deletar uma pessoa
         $query = "DELETE FROM pessoas WHERE id = :id";
         $stmt = $this->conexao->prepare($query);
         $stmt->bindParam(':id', $id);
@@ -199,3 +276,4 @@ class Pessoa
     }
 }
 ```
+
