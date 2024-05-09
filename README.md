@@ -1,5 +1,7 @@
 # Boas Práticas de Desenvolvimento de Código em PHP
 
+![](hadouken.jpg)
+
 ## Introdução
 
 - Desenvolver código legível e de fácil manutenção é crucial para o sucesso de um projeto em PHP.
